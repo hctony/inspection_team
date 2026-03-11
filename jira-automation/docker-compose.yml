@@ -1,0 +1,9 @@
+services:
+  jira-reporter:
+    build:
+      context: .
+    env_file:
+      - .env
+    environment:
+      TZ: ${TZ:-Asia/Seoul}
+    restart: unless-stopped
