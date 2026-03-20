@@ -17,8 +17,8 @@ from .storage import build_target_path, save_jpeg_atomic
 from .ui.dialogs import prompt_save_path, show_about, show_error, show_settings
 
 
-def _make_icon(app_dir: Path, size: int = 64) -> Image.Image:
-    icon_path = app_dir / "assets" / "dmtlogo.ico"
+def _make_icon(assets_dir: Path, size: int = 64) -> Image.Image:
+    icon_path = assets_dir / "dmtlogo.ico"
     if icon_path.exists():
         try:
             return Image.open(str(icon_path))
@@ -59,13 +59,14 @@ def _open_in_explorer(path: Path) -> None:
 class RuntimeContext:
     cfg: AppConfig
     app_dir: Path
+    assets_dir: Path
     stop_event: threading.Event
     on_config_change: Callable[[AppConfig], None]
     on_show_toolbar: Callable[[], None] | None = None
 
 
 def make_tray_icon(ctx: RuntimeContext) -> pystray.Icon:
-    icon = pystray.Icon("DMTSnapSync", _make_icon(ctx.app_dir), "DMTSnapSync")
+    icon = pystray.Icon("DMTSnapSync", _make_icon(ctx.assets_dir), "DMTSnapSync")
 
     def _save_image(img: Image.Image, action_label: str) -> None:
         when = datetime.now()

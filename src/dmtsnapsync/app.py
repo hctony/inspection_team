@@ -21,6 +21,7 @@ def _app_dir() -> Path:
 
 def main() -> int:
     app_dir = _app_dir()
+    assets_dir = Path(__file__).resolve().parent / "assets"
     stop_event = threading.Event()
 
     cfg = load_config(app_dir)
@@ -60,6 +61,7 @@ def main() -> int:
     ctx = RuntimeContext(
         cfg=_get_cfg(),
         app_dir=app_dir,
+        assets_dir=assets_dir,
         stop_event=stop_event,
         on_config_change=_on_config_change,
         on_show_toolbar=_show_toolbar,
@@ -166,10 +168,10 @@ def main() -> int:
 
     _register_current_hotkeys()
 
-    icon_path = app_dir / "assets" / "dmtlogo.ico"
-    full_icon_path = app_dir / "assets" / "fullscn.png"
-    region_icon_path = app_dir / "assets" / "areascn.png"
-    settings_icon_path = app_dir / "assets" / "setting.png"
+    icon_path = assets_dir / "dmtlogo.ico"
+    full_icon_path = assets_dir / "fullscn.png"
+    region_icon_path = assets_dir / "areascn.png"
+    settings_icon_path = assets_dir / "setting.png"
     toolbar = FloatingToolbar(
         on_full=_on_full,
         on_drag=_on_drag,
