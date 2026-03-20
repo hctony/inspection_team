@@ -1,6 +1,6 @@
 {
   "pc_alias": "",
-  "share_path": "C:/Users/DMT/Desktop/프로젝트/snapproject",
+  "share_path": "%USERPROFILE%\\Desktop",
   "quality": 85,
   "hotkey_full": "ctrl+f9",
   "hotkey_drag": "ctrl+f10"

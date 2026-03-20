@@ -126,14 +126,17 @@ def show_about(
     frame = ctk.CTkFrame(win, corner_radius=12)
     frame.pack(fill="both", expand=True, padx=16, pady=16)
 
-    ctk.CTkLabel(frame, text=app_name, font=ctk.CTkFont(size=20, weight="bold")).pack(anchor="w", padx=14, pady=(14, 6))
+    title_font = ctk.CTkFont(family="Malgun Gothic", size=20, weight="bold")
+    body_font = ctk.CTkFont(family="Malgun Gothic", size=13)
+
+    ctk.CTkLabel(frame, text=app_name, font=title_font).pack(anchor="w", padx=14, pady=(14, 6))
 
     info = (
         f"Director: {director_name} ({director_email})\n"
         f"Developer: {developer_name} ({developer_email})\n"
         f"Support/Inquiry: {support_contact}"
     )
-    ctk.CTkLabel(frame, text=info, justify="left").pack(anchor="w", padx=14, pady=(0, 10))
+    ctk.CTkLabel(frame, text=info, justify="left", font=body_font).pack(anchor="w", padx=14, pady=(0, 10))
 
     btn_row = ctk.CTkFrame(frame, fg_color="transparent")
     btn_row.pack(fill="x", padx=14, pady=(8, 12))

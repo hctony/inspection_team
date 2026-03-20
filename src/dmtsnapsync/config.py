@@ -26,7 +26,7 @@ class AppConfig:
 
 DEFAULT_CONFIG = AppConfig(
     pc_alias="",
-    share_path="./shared_folder",
+    share_path="%USERPROFILE%\\Desktop",
     quality=85,
     hotkey_full="ctrl+f9",
     hotkey_drag="ctrl+f10",

@@ -1,4 +1,4 @@
-# DMTSnapSync
+﻿# DMTSnapSync
 
 윈도우 트레이에서 동작하는 스크린샷 캡처 유틸리티입니다. 캡처 이미지를 고정된 폴더 구조로 저장합니다.
 
@@ -39,5 +39,5 @@ python -m dmtsnapsync
 
 **빌드 (PyInstaller)**
 ```bash
-pyinstaller --onefile --noconsole -n DMTSnapSync -m dmtsnapsync
+pyinstaller --onefile --noconsole -n DMTSnapSync ` --add-data "src\dmtsnapsync\assets;dmtsnapsync\assets" ` -p src ` build_entry.py
 ```
