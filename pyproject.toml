@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dmtsnapsync"
+version = "0.1.0"
+description = "Windows tray utility for capture and share-friendly sync layout."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "pillow",
+  "keyboard",
+  "pystray",
+  "customtkinter",
+]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+

@@ -1,0 +1,16 @@
+README.md
+pyproject.toml
+src/dmtsnapsync/__init__.py
+src/dmtsnapsync/__main__.py
+src/dmtsnapsync/app.py
+src/dmtsnapsync/capture.py
+src/dmtsnapsync/config.py
+src/dmtsnapsync/hotkeys.py
+src/dmtsnapsync/storage.py
+src/dmtsnapsync/tray.py
+src/dmtsnapsync.egg-info/PKG-INFO
+src/dmtsnapsync.egg-info/SOURCES.txt
+src/dmtsnapsync.egg-info/dependency_links.txt
+src/dmtsnapsync.egg-info/requires.txt
+src/dmtsnapsync.egg-info/top_level.txt
+src/dmtsnapsync/ui/dialogs.py
