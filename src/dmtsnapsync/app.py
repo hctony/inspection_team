@@ -9,7 +9,7 @@ from .config import AppConfig, load_config, save_config
 from .hotkeys import HotkeyHandles, register_hotkeys, unregister_hotkeys
 from .storage import build_target_path, save_jpeg_atomic
 from .tray import RuntimeContext, make_tray_icon
-from .ui.dialogs import prompt_save_path, show_error, show_settings
+from .ui.dialogs import show_error, show_settings
 from .ui.toolbar import FloatingToolbar
 
 
@@ -79,27 +79,7 @@ def main() -> int:
     def _save_capture(img, label: str) -> None:
         c = _get_cfg()
         when = datetime.now()
-        default_base = f"cap_{when.strftime('%Y%m%d_%H%M%S')}"
-        target_dir = build_target_path(c.share_path, c.resolved_pc_alias, when=when).parent
-        try:
-            target_dir.mkdir(parents=True, exist_ok=True)
-        except Exception:
-            pass
-        if toolbar is not None and toolbar.get_root() is not None:
-            chosen = toolbar.run_on_ui_thread(
-                lambda: prompt_save_path(
-                    default_base=default_base,
-                    parent=toolbar.get_root(),
-                    initial_dir=str(target_dir),
-                )
-            )
-        else:
-            chosen = prompt_save_path(default_base=default_base, initial_dir=str(target_dir))
-        if not chosen:
-            return
-        target = Path(chosen)
-        if target.suffix.lower() != ".jpg":
-            target = target.with_suffix(".jpg")
+        target = build_target_path(c.share_path, c.resolved_pc_alias, when=when)
 
         def _save_bg() -> None:
             res = save_jpeg_atomic(img, target, quality=c.quality)

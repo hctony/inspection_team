@@ -119,9 +119,12 @@ class FloatingToolbar:
 
         if ctk is not None:
             topbar = ctk.CTkFrame(frame, fg_color="#ffffff", corner_radius=0)
+            topbar_content = ctk.CTkFrame(topbar, fg_color="#ffffff", corner_radius=0)
         else:
             topbar = tk.Frame(frame, bg="#ffffff")
-        topbar.pack(fill="x", padx=8, pady=(6, 0), ipady=4)
+            topbar_content = tk.Frame(topbar, bg="#ffffff")
+        topbar.pack(fill="x", padx=0, pady=0)
+        topbar_content.pack(fill="x", padx=10, pady=6)
 
         if self._icon_path:
             try:
@@ -129,19 +132,24 @@ class FloatingToolbar:
                 icon_img = icon_img.resize((18, 18))
                 if ctk is not None:
                     icon_photo = ctk.CTkImage(icon_img, size=(18, 18))
-                    logo = ctk.CTkLabel(topbar, image=icon_photo, text="", fg_color="#ffffff")
+                    logo = ctk.CTkLabel(topbar_content, image=icon_photo, text="", fg_color="#ffffff")
                 else:
                     icon_photo = ImageTk.PhotoImage(icon_img)
-                    logo = tk.Label(topbar, image=icon_photo, bg="#ffffff")
+                    logo = tk.Label(topbar_content, image=icon_photo, bg="#ffffff")
                 logo.image = icon_photo
-                logo.pack(side="left", padx=(10, 6))
+                logo.pack(side="left", padx=(6, 6))
+                if ctk is not None:
+                    title = ctk.CTkLabel(topbar_content, text="DMTSnapSync", fg_color="#ffffff", text_color="#000000")
+                else:
+                    title = tk.Label(topbar_content, text="DMTSnapSync", bg="#ffffff", fg="#000000")
+                title.pack(side="left", padx=(0, 8))
             except Exception:
                 pass
 
         def _top_btn(text: str, cmd: Callable[[], None]):
             if ctk is not None:
                 return ctk.CTkButton(
-                    topbar,
+                    topbar_content,
                     text=text,
                     command=cmd,
                     fg_color="#ffffff",
@@ -152,7 +160,7 @@ class FloatingToolbar:
                     width=28,
                 )
             return tk.Button(
-                topbar,
+                topbar_content,
                 text=text,
                 command=cmd,
                 bg="#ffffff",
@@ -214,6 +222,7 @@ class FloatingToolbar:
 
         _bind_drag(frame)
         _bind_drag(topbar)
+        _bind_drag(topbar_content)
 
         _top_btn("X", self._on_quit).pack(side="right", padx=(4, 2))
         _top_btn("—", self.hide).pack(side="right", padx=(2, 2))

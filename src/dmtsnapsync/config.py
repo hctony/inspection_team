@@ -26,7 +26,7 @@ class AppConfig:
 
 DEFAULT_CONFIG = AppConfig(
     pc_alias="",
-    share_path="%USERPROFILE%\\Desktop",
+    share_path="C:\\DMTSnapSync",
     quality=85,
     hotkey_full="ctrl+f9",
     hotkey_drag="ctrl+f10",
@@ -59,7 +59,11 @@ def load_config(app_dir: Path) -> AppConfig:
         return DEFAULT_CONFIG
 
     pc_alias = str(raw.get("pc_alias", DEFAULT_CONFIG.pc_alias) or "")
-    share_path = str(raw.get("share_path", DEFAULT_CONFIG.share_path) or DEFAULT_CONFIG.share_path)
+    share_path = str(raw.get("share_path", DEFAULT_CONFIG.share_path) or "").strip()
+    if not share_path:
+        share_path = DEFAULT_CONFIG.share_path
+    if share_path in ("./shared_folder", ".\\shared_folder", "%USERPROFILE%\\Desktop"):
+        share_path = DEFAULT_CONFIG.share_path
     quality = _coerce_int(raw.get("quality", DEFAULT_CONFIG.quality), DEFAULT_CONFIG.quality)
     quality = max(1, min(100, quality))
     hotkey_full = str(raw.get("hotkey_full", DEFAULT_CONFIG.hotkey_full) or DEFAULT_CONFIG.hotkey_full)

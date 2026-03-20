@@ -14,7 +14,7 @@ from PIL import Image, ImageDraw
 from .capture import capture_fullscreen, capture_region_interactive
 from .config import AppConfig
 from .storage import build_target_path, save_jpeg_atomic
-from .ui.dialogs import prompt_save_path, show_about, show_error, show_settings
+from .ui.dialogs import show_about, show_error, show_settings
 
 
 def _make_icon(assets_dir: Path, size: int = 64) -> Image.Image:
@@ -70,18 +70,7 @@ def make_tray_icon(ctx: RuntimeContext) -> pystray.Icon:
 
     def _save_image(img: Image.Image, action_label: str) -> None:
         when = datetime.now()
-        default_base = f"cap_{when.strftime('%Y%m%d_%H%M%S')}"
-        target_dir = build_target_path(ctx.cfg.share_path, ctx.cfg.resolved_pc_alias, when=when).parent
-        try:
-            target_dir.mkdir(parents=True, exist_ok=True)
-        except Exception:
-            pass
-        chosen = prompt_save_path(default_base=default_base, initial_dir=str(target_dir))
-        if not chosen:
-            return
-        target = Path(chosen)
-        if target.suffix.lower() != ".jpg":
-            target = target.with_suffix(".jpg")
+        target = build_target_path(ctx.cfg.share_path, ctx.cfg.resolved_pc_alias, when=when)
 
         def _save_bg() -> None:
             res = save_jpeg_atomic(img, target, quality=ctx.cfg.quality)
@@ -123,11 +112,11 @@ def make_tray_icon(ctx: RuntimeContext) -> pystray.Icon:
     def _about() -> None:
         show_about(
             app_name="DMTSnapSync",
-            director_name="???",
-            director_email="TBD",
-            developer_name="???",
-            developer_email="ksw567590@gmail.com",
-            support_contact="ksw567590@gmail.com",
+            director_name="정태훈",
+            director_email="th_jeong@asdmt.com",
+            developer_name="강성우",
+            developer_email="sw_kang@asdmt.com",
+            support_contact="sw_kang@asdmt.com",
         )
 
     def _quit() -> None:

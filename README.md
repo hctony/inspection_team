@@ -39,5 +39,8 @@ python -m dmtsnapsync
 
 **빌드 (PyInstaller)**
 ```bash
-pyinstaller --onefile --noconsole -n DMTSnapSync ` --add-data "src\dmtsnapsync\assets;dmtsnapsync\assets" ` -p src ` build_entry.py
+pyinstaller --onefile --noconsole -n DMTSnapSync `
+  --add-data "src\dmtsnapsync\assets;dmtsnapsync\assets" `
+  -p src `
+  build_entry.py
 ```
