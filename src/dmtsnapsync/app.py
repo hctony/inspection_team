@@ -9,7 +9,7 @@ from .config import AppConfig, load_config, save_config
 from .hotkeys import HotkeyHandles, register_hotkeys, unregister_hotkeys
 from .storage import build_target_path, save_jpeg_atomic
 from .tray import RuntimeContext, make_tray_icon
-from .ui.dialogs import show_error, show_settings
+from .ui.dialogs import close_settings_window, show_about, show_error, show_settings
 from .ui.toolbar import FloatingToolbar
 
 
@@ -122,19 +122,32 @@ def main() -> int:
             _notify("Settings", "Saved settings.")
 
         try:
-            if toolbar is not None and toolbar.get_root() is not None:
-                toolbar.run_on_ui_thread(
-                    lambda: show_settings(_get_cfg(), on_save=_on_save, parent=toolbar.get_root())
-                )
-            else:
-                show_settings(_get_cfg(), on_save=_on_save)
+            # Use the same settings window path as tray menu to keep icon behavior consistent.
+            show_settings(_get_cfg(), on_save=_on_save)
         except Exception as e:
             show_error("Settings error", str(e))
+
+    def _open_about() -> None:
+        try:
+            show_about(
+                app_name="DMTSnapSync",
+                director_name="정태훈",
+                director_email="th_jeong@asdmt.com",
+                developer_name="강성우",
+                developer_email="sw_kang@asdmt.com",
+                support_contact="sw_kang@asdmt.com",
+            )
+        except Exception as e:
+            show_error("About error", str(e))
 
     def _quit_all() -> None:
         stop_event.set()
         try:
             icon.stop()
+        except Exception:
+            pass
+        try:
+            close_settings_window()
         except Exception:
             pass
         if toolbar is not None:
@@ -143,7 +156,7 @@ def main() -> int:
     def _run_icon() -> None:
         icon.run()
 
-    t = threading.Thread(target=_run_icon, daemon=False)
+    t = threading.Thread(target=_run_icon, daemon=True)
     t.start()
 
     _register_current_hotkeys()
@@ -152,15 +165,18 @@ def main() -> int:
     full_icon_path = assets_dir / "fullscn.png"
     region_icon_path = assets_dir / "areascn.png"
     settings_icon_path = assets_dir / "setting.png"
+    about_icon_path = assets_dir / "inquiry.png"
     toolbar = FloatingToolbar(
         on_full=_on_full,
         on_drag=_on_drag,
         on_settings=_open_settings,
+        on_about=_open_about,
         on_quit=_quit_all,
         icon_path=str(icon_path) if icon_path.exists() else None,
         full_icon_path=str(full_icon_path) if full_icon_path.exists() else None,
         region_icon_path=str(region_icon_path) if region_icon_path.exists() else None,
         settings_icon_path=str(settings_icon_path) if settings_icon_path.exists() else None,
+        about_icon_path=str(about_icon_path) if about_icon_path.exists() else None,
     )
     toolbar.start()
 
@@ -178,6 +194,10 @@ def main() -> int:
     try:
         if toolbar is not None:
             toolbar.stop()
+    except Exception:
+        pass
+    try:
+        t.join(timeout=1.0)
     except Exception:
         pass
 

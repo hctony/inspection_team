@@ -14,7 +14,7 @@ from PIL import Image, ImageDraw
 from .capture import capture_fullscreen, capture_region_interactive
 from .config import AppConfig
 from .storage import build_target_path, save_jpeg_atomic
-from .ui.dialogs import show_about, show_error, show_settings
+from .ui.dialogs import close_settings_window, show_about, show_error, show_settings
 
 
 def _make_icon(assets_dir: Path, size: int = 64) -> Image.Image:
@@ -121,6 +121,7 @@ def make_tray_icon(ctx: RuntimeContext) -> pystray.Icon:
 
     def _quit() -> None:
         ctx.stop_event.set()
+        close_settings_window()
         icon.stop()
 
     icon.menu = pystray.Menu(
@@ -134,4 +135,3 @@ def make_tray_icon(ctx: RuntimeContext) -> pystray.Icon:
         pystray.MenuItem("Quit", _quit),
     )
     return icon
-

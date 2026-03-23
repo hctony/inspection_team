@@ -203,6 +203,8 @@ cython_debug/
 
 # Project-specific
 AGENTS.md
+build_exe.ps1
+build_exe.bat
 
 # Marimo
 marimo/_static/

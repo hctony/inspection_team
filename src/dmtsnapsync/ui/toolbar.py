@@ -18,20 +18,24 @@ class FloatingToolbar:
         on_full: Callable[[], None],
         on_drag: Callable[[], None],
         on_settings: Callable[[], None],
+        on_about: Callable[[], None],
         on_quit: Callable[[], None],
         icon_path: str | None = None,
         full_icon_path: str | None = None,
         region_icon_path: str | None = None,
         settings_icon_path: str | None = None,
+        about_icon_path: str | None = None,
     ) -> None:
         self._on_full = on_full
         self._on_drag = on_drag
         self._on_settings = on_settings
+        self._on_about = on_about
         self._on_quit = on_quit
         self._icon_path = icon_path
         self._full_icon_path = full_icon_path
         self._region_icon_path = region_icon_path
         self._settings_icon_path = settings_icon_path
+        self._about_icon_path = about_icon_path
         self._thread: threading.Thread | None = None
         self._root: tk.Tk | None = None
         self._ui_thread_id: int | None = None
@@ -101,9 +105,11 @@ class FloatingToolbar:
         self._root = root
         self._ui_thread_id = threading.get_ident()
         root.title("DMTSnapSync Toolbar")
-        root.overrideredirect(True)
+        root.overrideredirect(False)
         root.attributes("-topmost", True)
-        root.geometry("540x96+40+40")
+        root.geometry("560x72+40+40")
+        root.resizable(False, False)
+        root.protocol("WM_DELETE_WINDOW", self._on_quit)
         if self._icon_path:
             try:
                 root.iconbitmap(self._icon_path)
@@ -116,62 +122,6 @@ class FloatingToolbar:
         else:
             frame = tk.Frame(root, bg="#111827")
         frame.pack(fill="both", expand=True)
-
-        if ctk is not None:
-            topbar = ctk.CTkFrame(frame, fg_color="#ffffff", corner_radius=0)
-            topbar_content = ctk.CTkFrame(topbar, fg_color="#ffffff", corner_radius=0)
-        else:
-            topbar = tk.Frame(frame, bg="#ffffff")
-            topbar_content = tk.Frame(topbar, bg="#ffffff")
-        topbar.pack(fill="x", padx=0, pady=0)
-        topbar_content.pack(fill="x", padx=10, pady=6)
-
-        if self._icon_path:
-            try:
-                icon_img = Image.open(self._icon_path)
-                icon_img = icon_img.resize((18, 18))
-                if ctk is not None:
-                    icon_photo = ctk.CTkImage(icon_img, size=(18, 18))
-                    logo = ctk.CTkLabel(topbar_content, image=icon_photo, text="", fg_color="#ffffff")
-                else:
-                    icon_photo = ImageTk.PhotoImage(icon_img)
-                    logo = tk.Label(topbar_content, image=icon_photo, bg="#ffffff")
-                logo.image = icon_photo
-                logo.pack(side="left", padx=(6, 6))
-                if ctk is not None:
-                    title = ctk.CTkLabel(topbar_content, text="DMTSnapSync", fg_color="#ffffff", text_color="#000000")
-                else:
-                    title = tk.Label(topbar_content, text="DMTSnapSync", bg="#ffffff", fg="#000000")
-                title.pack(side="left", padx=(0, 8))
-            except Exception:
-                pass
-
-        def _top_btn(text: str, cmd: Callable[[], None]):
-            if ctk is not None:
-                return ctk.CTkButton(
-                    topbar_content,
-                    text=text,
-                    command=cmd,
-                    fg_color="#ffffff",
-                    hover_color="#f3f4f6",
-                    text_color="#000000",
-                    corner_radius=0,
-                    height=22,
-                    width=28,
-                )
-            return tk.Button(
-                topbar_content,
-                text=text,
-                command=cmd,
-                bg="#ffffff",
-                fg="#000000",
-                activebackground="#f3f4f6",
-                activeforeground="#000000",
-                relief="solid",
-                borderwidth=1,
-                padx=6,
-                pady=2,
-            )
 
         def _btn(text: str, cmd: Callable[[], None], small: bool = False):
             if ctk is not None:
@@ -221,15 +171,11 @@ class FloatingToolbar:
                 pass
 
         _bind_drag(frame)
-        _bind_drag(topbar)
-        _bind_drag(topbar_content)
-
-        _top_btn("X", self._on_quit).pack(side="right", padx=(4, 2))
-        _top_btn("—", self.hide).pack(side="right", padx=(2, 2))
 
         full_img = None
         region_img = None
         settings_img = None
+        about_img = None
         if self._full_icon_path:
             try:
                 img = Image.open(self._full_icon_path)
@@ -260,12 +206,24 @@ class FloatingToolbar:
                     settings_img = ImageTk.PhotoImage(img)
             except Exception:
                 settings_img = None
+        if self._about_icon_path:
+            try:
+                img = Image.open(self._about_icon_path)
+                img = img.resize((18, 18))
+                if ctk is not None:
+                    about_img = ctk.CTkImage(img, size=(18, 18))
+                else:
+                    about_img = ImageTk.PhotoImage(img)
+            except Exception:
+                about_img = None
         if full_img is not None:
             self._images.append(full_img)
         if region_img is not None:
             self._images.append(region_img)
         if settings_img is not None:
             self._images.append(settings_img)
+        if about_img is not None:
+            self._images.append(about_img)
 
         full_btn = _btn("Full (F9)", self._on_full)
         if full_img:
@@ -273,7 +231,7 @@ class FloatingToolbar:
                 full_btn.configure(image=full_img, compound="left")
             except Exception:
                 pass
-        full_btn.pack(side="left", padx=(10, 8), pady=(8, 10))
+        full_btn.pack(side="left", padx=(10, 8), pady=12)
 
         region_btn = _btn("Region (F10)", self._on_drag)
         if region_img:
@@ -281,13 +239,21 @@ class FloatingToolbar:
                 region_btn.configure(image=region_img, compound="left")
             except Exception:
                 pass
-        region_btn.pack(side="left", padx=8, pady=(8, 10))
+        region_btn.pack(side="left", padx=8, pady=12)
         settings_btn = _btn("Settings", self._on_settings)
         if settings_img:
             try:
                 settings_btn.configure(image=settings_img, compound="left")
             except Exception:
                 pass
-        settings_btn.pack(side="left", padx=8, pady=(8, 10))
+        settings_btn.pack(side="left", padx=8, pady=12)
+
+        about_btn = _btn("문의", self._on_about)
+        if about_img:
+            try:
+                about_btn.configure(image=about_img, compound="left")
+            except Exception:
+                pass
+        about_btn.pack(side="left", padx=8, pady=12)
 
         root.mainloop()
