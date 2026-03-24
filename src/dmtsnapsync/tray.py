@@ -12,10 +12,16 @@ import pystray
 from PIL import Image, ImageDraw
 
 from .capture import capture_fullscreen, capture_region_interactive
-from .config import AppConfig, validate_about_metadata
+from .config import AppConfig
 from .retry_sync import RetrySyncQueue
 from .storage import build_target_path, save_jpeg_atomic
 from .ui.dialogs import close_settings_window, show_about, show_error, show_settings
+
+_ABOUT_DIRECTOR_NAME = "정태훈"
+_ABOUT_DIRECTOR_EMAIL = "th_jeong@asdmt.com"
+_ABOUT_DEVELOPER_NAME = "강성우"
+_ABOUT_DEVELOPER_EMAIL = "sw_kang@asdmt.com"
+_ABOUT_SUPPORT_CONTACT = "sw_kang@asdmt.com"
 
 
 def _make_icon(assets_dir: Path, size: int = 64) -> Image.Image:
@@ -63,7 +69,6 @@ class RuntimeContext:
     assets_dir: Path
     stop_event: threading.Event
     on_config_change: Callable[[AppConfig], None]
-    on_show_toolbar: Callable[[], None] | None = None
     retry_queue: RetrySyncQueue | None = None
 
 
@@ -128,17 +133,13 @@ def make_tray_icon(ctx: RuntimeContext) -> pystray.Icon:
             show_error("Settings error", str(e))
 
     def _about() -> None:
-        about_error = validate_about_metadata(ctx.cfg)
-        if about_error:
-            show_error("About metadata missing", f"{about_error}\nPlease update Settings.")
-            return
         show_about(
             app_name="DMTSnapSync",
-            director_name=ctx.cfg.owner_name,
-            director_email=ctx.cfg.owner_email,
-            developer_name=ctx.cfg.developer_name,
-            developer_email=ctx.cfg.developer_email,
-            support_contact=ctx.cfg.support_contact,
+            director_name=_ABOUT_DIRECTOR_NAME,
+            director_email=_ABOUT_DIRECTOR_EMAIL,
+            developer_name=_ABOUT_DEVELOPER_NAME,
+            developer_email=_ABOUT_DEVELOPER_EMAIL,
+            support_contact=_ABOUT_SUPPORT_CONTACT,
         )
 
     def _quit() -> None:
@@ -150,7 +151,6 @@ def make_tray_icon(ctx: RuntimeContext) -> pystray.Icon:
         pystray.MenuItem("Capture Fullscreen", lambda: threading.Thread(target=_capture_full, daemon=True).start()),
         pystray.MenuItem("Capture Region (Drag)", lambda: threading.Thread(target=_capture_drag, daemon=True).start()),
         pystray.Menu.SEPARATOR,
-        pystray.MenuItem("Show Toolbar", lambda: ctx.on_show_toolbar() if ctx.on_show_toolbar else None),
         pystray.MenuItem("Open Folder", _open_folder),
         pystray.MenuItem("Settings", _settings),
         pystray.MenuItem("About", _about),

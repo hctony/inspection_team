@@ -12,7 +12,7 @@ from tkinter import filedialog, messagebox
 
 from PIL import Image, ImageTk
 
-from ..config import AppConfig, validate_about_metadata
+from ..config import AppConfig
 
 try:
     import customtkinter as ctk
@@ -295,11 +295,11 @@ def show_settings(
 
     if ctk is None:
         if parent is None:
-            root, _ = _create_tk_root("DMTSnapSync Settings", geometry="700x500")
+            root, _ = _create_tk_root("DMTSnapSync Settings", geometry="700x335")
         else:
             root = tk.Toplevel(parent)
             root.title("DMTSnapSync Settings")
-            root.geometry("700x500")
+            root.geometry("700x335")
         root.resizable(False, False)
         root.configure(bg=_THEME_DARK)
         _set_window_icon(root)
@@ -310,11 +310,6 @@ def show_settings(
             ("Share Path", "share_path", cfg.share_path),
             ("JPEG Quality (1-100)", "quality", str(cfg.quality)),
             ("Max Image Size (KB, optional)", "max_image_size_kb", str(cfg.max_image_size_kb or "")),
-            ("Owner/Director Name", "owner_name", cfg.owner_name),
-            ("Owner/Director Email", "owner_email", cfg.owner_email),
-            ("Developer Name", "developer_name", cfg.developer_name),
-            ("Developer Email", "developer_email", cfg.developer_email),
-            ("Support Contact", "support_contact", cfg.support_contact),
             ("Hotkey (Full)", "hotkey_full", cfg.hotkey_full),
             ("Hotkey (Drag)", "hotkey_drag", cfg.hotkey_drag),
         ]
@@ -391,18 +386,9 @@ def show_settings(
                 share_path=entries["share_path"].get(),
                 quality=q,
                 max_image_size_kb=max_size,
-                owner_name=entries["owner_name"].get(),
-                owner_email=entries["owner_email"].get(),
-                developer_name=entries["developer_name"].get(),
-                developer_email=entries["developer_email"].get(),
-                support_contact=entries["support_contact"].get(),
                 hotkey_full=entries["hotkey_full"].get(),
                 hotkey_drag=entries["hotkey_drag"].get(),
             )
-            about_error = validate_about_metadata(new_cfg, require_all=False)
-            if about_error:
-                messagebox.showerror("Invalid setting", about_error, parent=root)
-                return
             on_save(new_cfg)
             _settings_window = None
             root.destroy()
@@ -463,7 +449,7 @@ def show_settings(
         win = ctk.CTkToplevel(parent)
     win.title("DMTSnapSync Settings")
     win.resizable(False, False)
-    win.geometry("760x560")
+    win.geometry("760x340")
     win.configure(fg_color=_THEME_DARK)
     _set_window_icon(win)
     _settings_window = win
@@ -476,11 +462,6 @@ def show_settings(
         ("Share Path", "share_path", cfg.share_path),
         ("JPEG Quality (1-100)", "quality", str(cfg.quality)),
         ("Max Image Size (KB, optional)", "max_image_size_kb", str(cfg.max_image_size_kb or "")),
-        ("Owner/Director Name", "owner_name", cfg.owner_name),
-        ("Owner/Director Email", "owner_email", cfg.owner_email),
-        ("Developer Name", "developer_name", cfg.developer_name),
-        ("Developer Email", "developer_email", cfg.developer_email),
-        ("Support Contact", "support_contact", cfg.support_contact),
         ("Hotkey (Full)", "hotkey_full", cfg.hotkey_full),
         ("Hotkey (Drag)", "hotkey_drag", cfg.hotkey_drag),
     ]
@@ -560,18 +541,9 @@ def show_settings(
             share_path=entries["share_path"].get(),
             quality=q,
             max_image_size_kb=max_size,
-            owner_name=entries["owner_name"].get(),
-            owner_email=entries["owner_email"].get(),
-            developer_name=entries["developer_name"].get(),
-            developer_email=entries["developer_email"].get(),
-            support_contact=entries["support_contact"].get(),
             hotkey_full=entries["hotkey_full"].get(),
             hotkey_drag=entries["hotkey_drag"].get(),
         )
-        about_error = validate_about_metadata(new_cfg, require_all=False)
-        if about_error:
-            err_var.set(about_error)
-            return
         on_save(new_cfg)
         _settings_window = None
         win.destroy()

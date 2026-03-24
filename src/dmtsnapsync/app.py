@@ -5,13 +5,12 @@ from datetime import datetime
 from pathlib import Path
 
 from .capture import capture_fullscreen, capture_region_interactive
-from .config import AppConfig, load_config, save_config, validate_about_metadata
+from .config import AppConfig, load_config, save_config
 from .hotkeys import HotkeyHandles, register_hotkeys, unregister_hotkeys
 from .retry_sync import RetrySyncQueue
 from .storage import build_target_path, save_jpeg_atomic
 from .tray import RuntimeContext, make_tray_icon
-from .ui.dialogs import close_settings_window, show_about, show_error, show_settings
-from .ui.toolbar import FloatingToolbar
+from .ui.dialogs import close_settings_window
 
 
 def _app_dir() -> Path:
@@ -56,22 +55,16 @@ def main() -> int:
         _set_cfg(new_cfg)
         _register_current_hotkeys()
 
-    def _show_toolbar() -> None:
-        if toolbar is not None:
-            toolbar.show()
-
     ctx = RuntimeContext(
         cfg=_get_cfg(),
         app_dir=app_dir,
         assets_dir=assets_dir,
         stop_event=stop_event,
         on_config_change=_on_config_change,
-        on_show_toolbar=_show_toolbar,
         retry_queue=retry_queue,
     )
 
     icon = make_tray_icon(ctx)
-    toolbar: FloatingToolbar | None = None
 
     def _notify(title: str, message: str) -> None:
         try:
@@ -113,59 +106,18 @@ def main() -> int:
         threading.Thread(target=_save_bg, daemon=True).start()
 
     def _on_full() -> None:
-        if toolbar is not None:
-            toolbar.hide()
         cap = capture_fullscreen()
         if not cap.ok or not cap.image:
             _notify("Capture failed", cap.error or "Unknown error")
-            if toolbar is not None:
-                toolbar.show()
             return
         _save_capture(cap.image, "Fullscreen")
-        if toolbar is not None:
-            toolbar.show()
 
     def _on_drag() -> None:
-        if toolbar is not None:
-            toolbar.hide()
         cap = capture_region_interactive()
         if not cap.ok or not cap.image:
             _notify("Capture failed", cap.error or "Unknown error")
-            if toolbar is not None:
-                toolbar.show()
             return
         _save_capture(cap.image, "Region")
-        if toolbar is not None:
-            toolbar.show()
-
-    def _open_settings() -> None:
-        def _on_save(new_cfg: AppConfig) -> None:
-            _on_config_change(new_cfg)
-            _notify("Settings", "Saved settings.")
-
-        try:
-            # Use the same settings window path as tray menu to keep icon behavior consistent.
-            show_settings(_get_cfg(), on_save=_on_save)
-        except Exception as e:
-            show_error("Settings error", str(e))
-
-    def _open_about() -> None:
-        c = _get_cfg()
-        about_error = validate_about_metadata(c)
-        if about_error:
-            show_error("About metadata missing", f"{about_error}\nPlease update Settings.")
-            return
-        try:
-            show_about(
-                app_name="DMTSnapSync",
-                director_name=c.owner_name,
-                director_email=c.owner_email,
-                developer_name=c.developer_name,
-                developer_email=c.developer_email,
-                support_contact=c.support_contact,
-            )
-        except Exception as e:
-            show_error("About error", str(e))
 
     def _quit_all() -> None:
         stop_event.set()
@@ -178,8 +130,6 @@ def main() -> int:
             close_settings_window()
         except Exception:
             pass
-        if toolbar is not None:
-            toolbar.stop()
 
     def _run_icon() -> None:
         icon.run()
@@ -188,25 +138,6 @@ def main() -> int:
     t.start()
 
     _register_current_hotkeys()
-
-    icon_path = assets_dir / "dmtlogo.ico"
-    full_icon_path = assets_dir / "fullscn.png"
-    region_icon_path = assets_dir / "areascn.png"
-    settings_icon_path = assets_dir / "setting.png"
-    about_icon_path = assets_dir / "inquiry.png"
-    toolbar = FloatingToolbar(
-        on_full=_on_full,
-        on_drag=_on_drag,
-        on_settings=_open_settings,
-        on_about=_open_about,
-        on_quit=_quit_all,
-        icon_path=str(icon_path) if icon_path.exists() else None,
-        full_icon_path=str(full_icon_path) if full_icon_path.exists() else None,
-        region_icon_path=str(region_icon_path) if region_icon_path.exists() else None,
-        settings_icon_path=str(settings_icon_path) if settings_icon_path.exists() else None,
-        about_icon_path=str(about_icon_path) if about_icon_path.exists() else None,
-    )
-    toolbar.start()
 
     # Keep cfg on ctx updated (tray callbacks use ctx.cfg snapshot)
     while not stop_event.is_set():
@@ -217,11 +148,6 @@ def main() -> int:
     try:
         if hotkey_handles is not None:
             unregister_hotkeys(hotkey_handles)
-    except Exception:
-        pass
-    try:
-        if toolbar is not None:
-            toolbar.stop()
     except Exception:
         pass
     try:

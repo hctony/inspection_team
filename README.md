@@ -1,13 +1,14 @@
 ﻿# DMTSnapSync
 
-DMTSnapSync는 Windows 트레이/툴바 기반 스크린샷 유틸리티입니다.  
+DMTSnapSync는 Windows 트레이 아이콘 기반 스크린샷 유틸리티입니다.  
 각 PC에서 캡처한 이미지를 지정된 공유 경로에 PC별/날짜별로 자동 정리해 저장합니다.
 
 ## 최근 반영 사항 (요약)
 
+- 트레이 아이콘 단독 모드로 전환(툴바 제거)
+- 트레이 단독 모드에서도 전역 핫키 캡처 유지
 - `max_image_size_kb` 옵션 구현
-- About 메타데이터 하드코딩 제거 (`config.json` 기반 표시)
-- About 메타데이터 입력/검증 경로 추가 (Settings에서 관리)
+- About 메타데이터 하드코딩 고정(설정 입력 제거)
 - 네트워크 저장 실패 시 로컬 스풀 + 자동 재시도 큐 구현
 
 ## 저장 규칙
@@ -20,27 +21,23 @@ DMTSnapSync는 Windows 트레이/툴바 기반 스크린샷 유틸리티입니�
 
 ## 현재 구현 기능
 
-- 시스템 트레이 앱 동작
+- 시스템 트레이 아이콘 단독 앱 동작
 - 트레이 메뉴
 - `Capture Fullscreen`
 - `Capture Region (Drag)`
-- `Show Toolbar`
 - `Open Folder`
 - `Settings`
 - `About`
 - `Quit`
-- 플로팅 툴바(기본 Windows 제목표시줄 사용)
-- 버튼: `Full`, `Region`, `Settings`, `문의(About)`
 - 전체화면 캡처 (`Ctrl+F9`)
 - 영역 드래그 캡처 (`Ctrl+F10`)
+- 앱 비활성/백그라운드 상태에서도 전역 핫키 동작
 - 전역 핫키 콜백 비동기 처리(응답성 유지)
-- 캡처 직전 툴바 숨김, 캡처 후 복원
 - 설정 창 경로 찾아보기(Browse) 지원
 - About/Settings 창 로고 아이콘 적용
 - 설정값 `config.json` 저장/재로드
 - `max_image_size_kb` 적용 저장(품질 조정 + 필요 시 해상도 축소)
-- About 정보 `config.json` 기반 표시 (Owner/Developer/Support)
-- About 실행 전 메타데이터 검증(누락/이메일 형식)
+- About 정보 하드코딩 표시 (Owner/Developer/Support)
 - 네트워크 실패 시 `_retry_spool` 큐잉 후 백그라운드 자동 재동기화
 
 ## 설정 항목
@@ -49,11 +46,6 @@ DMTSnapSync는 Windows 트레이/툴바 기반 스크린샷 유틸리티입니�
 - `share_path`: 저장 루트 경로(기본값 `C:\DMTSnapSync`)
 - `quality`: JPEG 품질(`1~100`)
 - `max_image_size_kb`: 최대 이미지 용량(KB, 비우면 미적용)
-- `owner_name`: About의 Owner/Director 이름
-- `owner_email`: About의 Owner/Director 이메일
-- `developer_name`: About의 Developer/Bug Contact 이름
-- `developer_email`: About의 Developer/Bug Contact 이메일
-- `support_contact`: About의 지원/문의 정보
 - `hotkey_full`: 전체 캡처 핫키
 - `hotkey_drag`: 영역 캡처 핫키
 
@@ -69,17 +61,23 @@ python -m dmtsnapsync
 ```
 
 실행 후 화면에 큰 창이 뜨지 않는 것이 정상입니다.  
-트레이 아이콘/툴바에서 기능을 사용하면 됩니다.
+트레이 아이콘에서 기능을 사용하면 됩니다.
 
 ## 빌드 방법 (PyInstaller, 단일 EXE)
 
 권장:
 
 ```powershell
+.\build_exe.bat
+```
+
+PowerShell 직접 실행:
+
+```powershell
 .\build_exe.ps1
 ```
 
-직접 실행:
+PyInstaller 직접 실행:
 
 ```powershell
 .\.venv\Scripts\pyinstaller --noconfirm --clean --onefile --noconsole -n DMTSnapSync --additional-hooks-dir hooks -p src build_entry.py
