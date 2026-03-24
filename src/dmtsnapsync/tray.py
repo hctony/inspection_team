@@ -12,7 +12,8 @@ import pystray
 from PIL import Image, ImageDraw
 
 from .capture import capture_fullscreen, capture_region_interactive
-from .config import AppConfig
+from .config import AppConfig, validate_about_metadata
+from .retry_sync import RetrySyncQueue
 from .storage import build_target_path, save_jpeg_atomic
 from .ui.dialogs import close_settings_window, show_about, show_error, show_settings
 
@@ -63,6 +64,7 @@ class RuntimeContext:
     stop_event: threading.Event
     on_config_change: Callable[[AppConfig], None]
     on_show_toolbar: Callable[[], None] | None = None
+    retry_queue: RetrySyncQueue | None = None
 
 
 def make_tray_icon(ctx: RuntimeContext) -> pystray.Icon:
@@ -73,9 +75,25 @@ def make_tray_icon(ctx: RuntimeContext) -> pystray.Icon:
         target = build_target_path(ctx.cfg.share_path, ctx.cfg.resolved_pc_alias, when=when)
 
         def _save_bg() -> None:
-            res = save_jpeg_atomic(img, target, quality=ctx.cfg.quality)
+            res = save_jpeg_atomic(
+                img,
+                target,
+                quality=ctx.cfg.quality,
+                max_image_size_kb=ctx.cfg.max_image_size_kb,
+            )
             if res.ok and res.path:
                 _notify(icon, "Saved", f"{action_label}: {res.path}")
+            elif ctx.retry_queue is not None:
+                qres = ctx.retry_queue.enqueue_image(
+                    img,
+                    target,
+                    quality=ctx.cfg.quality,
+                    max_image_size_kb=ctx.cfg.max_image_size_kb,
+                )
+                if qres.ok and qres.path:
+                    _notify(icon, "Queued", f"{action_label}: {qres.path.name}")
+                else:
+                    _notify(icon, "Save failed", qres.error or res.error or "Unknown error")
             else:
                 _notify(icon, "Save failed", res.error or "Unknown error")
 
@@ -110,13 +128,17 @@ def make_tray_icon(ctx: RuntimeContext) -> pystray.Icon:
             show_error("Settings error", str(e))
 
     def _about() -> None:
+        about_error = validate_about_metadata(ctx.cfg)
+        if about_error:
+            show_error("About metadata missing", f"{about_error}\nPlease update Settings.")
+            return
         show_about(
             app_name="DMTSnapSync",
-            director_name="정태훈",
-            director_email="th_jeong@asdmt.com",
-            developer_name="강성우",
-            developer_email="sw_kang@asdmt.com",
-            support_contact="sw_kang@asdmt.com",
+            director_name=ctx.cfg.owner_name,
+            director_email=ctx.cfg.owner_email,
+            developer_name=ctx.cfg.developer_name,
+            developer_email=ctx.cfg.developer_email,
+            support_contact=ctx.cfg.support_contact,
         )
 
     def _quit() -> None:
@@ -135,3 +157,4 @@ def make_tray_icon(ctx: RuntimeContext) -> pystray.Icon:
         pystray.MenuItem("Quit", _quit),
     )
     return icon
+

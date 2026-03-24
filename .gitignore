@@ -203,8 +203,11 @@ cython_debug/
 
 # Project-specific
 AGENTS.md
+datareadme.md
 build_exe.ps1
 build_exe.bat
+retry_queue.json
+_retry_spool/
 
 # Marimo
 marimo/_static/

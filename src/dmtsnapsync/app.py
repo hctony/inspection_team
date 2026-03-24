@@ -5,8 +5,9 @@ from datetime import datetime
 from pathlib import Path
 
 from .capture import capture_fullscreen, capture_region_interactive
-from .config import AppConfig, load_config, save_config
+from .config import AppConfig, load_config, save_config, validate_about_metadata
 from .hotkeys import HotkeyHandles, register_hotkeys, unregister_hotkeys
+from .retry_sync import RetrySyncQueue
 from .storage import build_target_path, save_jpeg_atomic
 from .tray import RuntimeContext, make_tray_icon
 from .ui.dialogs import close_settings_window, show_about, show_error, show_settings
@@ -23,6 +24,7 @@ def main() -> int:
     app_dir = _app_dir()
     assets_dir = Path(__file__).resolve().parent / "assets"
     stop_event = threading.Event()
+    retry_queue = RetrySyncQueue(app_dir)
 
     cfg = load_config(app_dir)
     cfg_lock = threading.Lock()
@@ -65,6 +67,7 @@ def main() -> int:
         stop_event=stop_event,
         on_config_change=_on_config_change,
         on_show_toolbar=_show_toolbar,
+        retry_queue=retry_queue,
     )
 
     icon = make_tray_icon(ctx)
@@ -76,15 +79,34 @@ def main() -> int:
         except Exception:
             pass
 
+    retry_queue.set_notifier(_notify)
+    retry_queue.start()
+
     def _save_capture(img, label: str) -> None:
         c = _get_cfg()
         when = datetime.now()
         target = build_target_path(c.share_path, c.resolved_pc_alias, when=when)
 
         def _save_bg() -> None:
-            res = save_jpeg_atomic(img, target, quality=c.quality)
+            res = save_jpeg_atomic(
+                img,
+                target,
+                quality=c.quality,
+                max_image_size_kb=c.max_image_size_kb,
+            )
             if res.ok and res.path:
                 _notify("Saved", f"{label}: {res.path}")
+            elif ctx.retry_queue is not None:
+                qres = ctx.retry_queue.enqueue_image(
+                    img,
+                    target,
+                    quality=c.quality,
+                    max_image_size_kb=c.max_image_size_kb,
+                )
+                if qres.ok and qres.path:
+                    _notify("Queued", f"{label}: {qres.path.name}")
+                else:
+                    _notify("Save failed", qres.error or res.error or "Unknown error")
             else:
                 _notify("Save failed", res.error or "Unknown error")
 
@@ -128,20 +150,26 @@ def main() -> int:
             show_error("Settings error", str(e))
 
     def _open_about() -> None:
+        c = _get_cfg()
+        about_error = validate_about_metadata(c)
+        if about_error:
+            show_error("About metadata missing", f"{about_error}\nPlease update Settings.")
+            return
         try:
             show_about(
                 app_name="DMTSnapSync",
-                director_name="정태훈",
-                director_email="th_jeong@asdmt.com",
-                developer_name="강성우",
-                developer_email="sw_kang@asdmt.com",
-                support_contact="sw_kang@asdmt.com",
+                director_name=c.owner_name,
+                director_email=c.owner_email,
+                developer_name=c.developer_name,
+                developer_email=c.developer_email,
+                support_contact=c.support_contact,
             )
         except Exception as e:
             show_error("About error", str(e))
 
     def _quit_all() -> None:
         stop_event.set()
+        retry_queue.stop()
         try:
             icon.stop()
         except Exception:
@@ -200,6 +228,11 @@ def main() -> int:
         t.join(timeout=1.0)
     except Exception:
         pass
+    try:
+        retry_queue.stop()
+    except Exception:
+        pass
 
     return 0
+
 
